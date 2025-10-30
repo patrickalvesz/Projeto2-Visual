@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Filtros de Imagem</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      color: #6c5ce7;
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #a0a0a0;
+      font-size: 1.1rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-input-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      border: 2px dashed #d1d5db;
+      border-radius: 15px;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .file-input-label:hover {
+      border-color: #6c5ce7;
+      background: #f0f0ff;
+      color: #6c5ce7;
+    }
+
+    .file-input-label i {
+      margin-right: 10px;
+      font-size: 1.2rem;
+    }
+
+    .filter-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 25px 0;
+    }
+
+    .filter-option {
+      position: relative;
+    }
+
+    .filter-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .filter-option label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px 20px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      background: #f9fafb;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      color: #6b7280;
+    }
+
+    .filter-option input[type="radio"]:checked + label {
+      border-color: #6c5ce7;
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .colorpop-options {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.3s ease;
+    }
+
+    .colorpop-options.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .colorpop-options.hide {
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+    }
+
+    .color-input-group {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .color-input-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .color-picker {
+      width: 50px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .tolerance-input {
+      width: 80px;
+      padding: 8px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    .tolerance-input:focus {
+      outline: none;
+      border-color: #6c5ce7;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+      width: 100%;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(108, 92, 231, 0.4);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .error-message {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-top: 15px;
+      border: 1px solid #fecaca;
+    }
+
+    .results-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .image-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .image-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .image-card h3 {
+      color: #374151;
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .image-wrapper {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .image-wrapper:hover {
+      transform: scale(1.02);
+    }
+
+    .image-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, #00b894, #00cec9);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 15px;
+      width: 100%;
+      box-shadow: 0 3px 10px rgba(0, 184, 148, 0.3);
+    }
+
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
+    }
+
+    .clear-file-btn {
+      background: linear-gradient(135deg, #e17055, #d63031);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(214, 48, 49, 0.3);
+    }
+
+    .clear-file-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(214, 48, 49, 0.4);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      color: white;
+      font-size: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #a0a0a0;
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .filter-options {
+        grid-template-columns: 1fr;
+      }
+      
+      .color-input-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎨 Filtros de Imagem</h1>
+      <p>Transforme suas fotos com filtros incríveis</p>
+    </div>
+
+    <div class="card">
+      <form method="POST" enctype="multipart/form-data" oninput="toggleColorPop()">
+        {% if original_filename %}
+        <input type="hidden" name="original_filename" value="{{ original_filename }}">
+        {% endif %}
+        
+        <div class="form-group">
+          <div class="file-input-wrapper">
+            <input type="file" name="file" accept="image/*" class="file-input" id="fileInput" {% if not original_filename %}required{% endif %}>
+            <label for="fileInput" class="file-input-label">
+              <i>📁</i>
+              <span id="fileLabel">
+                {% if original_filename %}
+                  📷 Usando: {{ original_filename }} (clique para trocar)
+                {% else %}
+                  Clique para selecionar uma imagem
+                {% endif %}
+              </span>
+            </label>
+          </div>
+          {% if original_filename %}
+          <div style="margin-top: 10px; text-align: center;">
+            <button type="button" id="clearFileBtn" class="clear-file-btn">
+              🗑️ Limpar arquivo atual
+            </button>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="filter-options">
+          <div class="filter-option">
+            <input type="radio" name="filtro" value="sepia" id="sepia" {% if not filtro or filtro == 'sepia' %}checked{% endif %}>
+            <label for="sepia">🌅 Sépia</label>
+          </div>
+          <div class="filter-option">
+            <input type="radio" name="filtro" value="sketch" id="sketch" {% if filtro == 'sketch' %}checked{% endif %}>
+            <label for="sketch">✏️ Sketch</label>
+          </div>
+          <div class="filter-option">
+            <input type="radio" name="filtro" value="colorpop" id="colorpop" {% if filtro == 'colorpop' %}checked{% endif %}>
+            <label for="colorpop">🌈 Color Pop</label>
+          </div>
+        </div>
+
+        <div id="colorpop-opts" class="colorpop-options {% if filtro == 'colorpop' %}show{% else %}hide{% endif %}">
+          <div class="color-input-group">
+            <label>
+              🎨 Cor a destacar:
+              <input type="color" name="cor" value="{{ cor|default('#ff0000') }}" class="color-picker">
+            </label>
+            <label>
+              Tolerância (°):
+              <input type="number" name="tol" min="0" max="60" value="{{ tol|default('25') }}" class="tolerance-input">
+            </label>
+          </div>
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">
+            💡 Dica: escolha a cor dominante que você quer manter na imagem
+          </p>
+        </div>
+
+        <button type="submit" class="submit-btn">
+          ✨ Aplicar Filtro
+        </button>
+
+        {% if erro %}
+          <div class="error-message">
+            ❌ {{ erro }}
+          </div>
+        {% endif %}
+      </form>
+    </div>
+
+    {% if original %}
+    <div class="results-container">
+      <div class="image-card">
+        <h3>📷 Imagem Original</h3>
+        <div class="image-wrapper" data-image-src="{{ url_for('uploaded_file', filename=original) }}">
+          <img src="{{ url_for('uploaded_file', filename=original) }}" alt="Imagem Original">
+        </div>
+        <button class="download-btn" data-image-src="{{ url_for('uploaded_file', filename=original) }}" data-filename="original_{{ original }}">
+          💾 Baixar Original
+        </button>
+      </div>
+
+      <div class="image-card">
+        <h3>🎨 Resultado ({{ filtro|default('') }})</h3>
+        <div class="image-wrapper" data-image-src="{{ url_for('uploaded_file', filename=filtered) }}">
+          <img src="{{ url_for('uploaded_file', filename=filtered) }}" alt="Imagem Filtrada">
+        </div>
+        <button class="download-btn" data-image-src="{{ url_for('uploaded_file', filename=filtered) }}" data-filename="filtered_{{ filtered }}">
+          💾 Baixar Filtrada
+        </button>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+      <p>Filtros de Imagem Sepia / Sketch / Color Pop</p>
+    </div>
+  </div>
+
+  <!-- Modal para visualizar imagens -->
+  <div id="imageModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <img id="modalImage" src="" alt="Imagem em tamanho maior">
+    </div>
+  </div>
+
+  <script>
+
+  function toggleColorPop() {
+      const isColorPop = document.querySelector('input[name="filtro"][value="colorpop"]').checked;
+      const colorpopOpts = document.getElementById('colorpop-opts');
+      
+      if (isColorPop) {
+        colorpopOpts.classList.remove('hide');
+        colorpopOpts.classList.add('show');
+      } else {
+        colorpopOpts.classList.remove('show');
+        colorpopOpts.classList.add('hide');
+      }
+    }
+
+    function openModal(imageSrc) {
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImage');
+      modal.style.display = 'block';
+      modalImg.src = imageSrc;
+    }
+
+    function closeModal() {
+      document.getElementById('imageModal').style.display = 'none';
+    }
+
+    function downloadImage(imageSrc, filename) {
+      const link = document.createElement('a');
+      link.href = imageSrc;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('imageModal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', toggleColorPop);
+
+    // Atualizar label do arquivo quando selecionado
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const fileLabel = document.getElementById('fileLabel');
+      if (e.target.files.length > 0) {
+        fileLabel.textContent = '📁 ' + e.target.files[0].name;
+      } else {
+        // Verifica se há um arquivo original sendo usado
+        const originalFilename = document.querySelector('input[name="original_filename"]');
+        if (originalFilename) {
+          fileLabel.textContent = '📷 Usando: ' + originalFilename.value + ' (clique para trocar)';
+        } else {
+          fileLabel.textContent = 'Clique para selecionar uma imagem';
+        }
+      }
+    });
+
+    // Event listeners para imagens e botões de download
+    document.addEventListener('DOMContentLoaded', function() {
+      // Event listeners para abrir modal ao clicar na imagem
+      document.querySelectorAll('.image-wrapper').forEach(function(wrapper) {
+        wrapper.addEventListener('click', function() {
+          const imageSrc = this.getAttribute('data-image-src');
+          openModal(imageSrc);
+        });
+      });
+
+      // Event listeners para download
+      document.querySelectorAll('.download-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+          const imageSrc = this.getAttribute('data-image-src');
+          const filename = this.getAttribute('data-filename');
+          downloadImage(imageSrc, filename);
+        });
+      });
+
+      // Event listener para botão de limpar arquivo
+      const clearFileBtn = document.getElementById('clearFileBtn');
+      if (clearFileBtn) {
+        clearFileBtn.addEventListener('click', function() {
+          // Remove o campo hidden do arquivo original
+          const originalFilenameInput = document.querySelector('input[name="original_filename"]');
+          if (originalFilenameInput) {
+            originalFilenameInput.remove();
+          }
+          
+          // Limpa o input de arquivo
+          const fileInput = document.getElementById('fileInput');
+          fileInput.value = '';
+          fileInput.required = true;
+          
+          // Atualiza o label
+          const fileLabel = document.getElementById('fileLabel');
+          fileLabel.textContent = 'Clique para selecionar uma imagem';
+          
+          // Remove o botão de limpar
+          this.parentElement.remove();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
