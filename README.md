@@ -35,7 +35,7 @@ Projeto2-Visual/
 ## 🚀 Como Executar
 1. Instale as dependências:
    ```bash
-   pip install flask pillow
+   pip install flask pillow pillow-avif-plugin
    ```
 
 2. Execute o servidor Flask:
