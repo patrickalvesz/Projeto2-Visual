@@ -1,6 +1,7 @@
 import os, colorsys
 from flask import Flask, render_template, request, send_from_directory
-from PIL import Image, ImageOps, ImageFilter
+from PIL import Image, ImageOps, ImageFilter, UnidentifiedImageError
+from pillow_avif import AvifImagePlugin
 
 app = Flask(__name__)
 
@@ -8,9 +9,17 @@ UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+def abrir_rgb(path):
+    try:
+        with Image.open(path) as im:
+            return im.convert("RGB")
+    except UnidentifiedImageError:
+        # Evita 500 e mostra mensagem amigável
+        raise ValueError("Formato de imagem não suportado. Envie JPG/PNG/WebP/AVIF (requer plugin).")
+
 # ---------- Filtros ----------
 def aplicar_sepia(image_path):
-    img = Image.open(image_path).convert("RGB")
+    img = abrir_rgb(image_path)
     pixels = img.load()
     for i in range(img.width):
         for j in range(img.height):
@@ -25,7 +34,7 @@ def aplicar_sepia(image_path):
 
 def aplicar_sketch(image_path):
     """Sketch simples: escala de cinza + detecção de bordas + inversão"""
-    img = Image.open(image_path).convert("L")
+    img = abrir_rgb(image_path).convert("L")
     edges = img.filter(ImageFilter.FIND_EDGES)
     sketch = ImageOps.invert(edges)
     sketch = ImageOps.autocontrast(sketch, cutoff=2).convert("RGB")
@@ -34,12 +43,8 @@ def aplicar_sketch(image_path):
     return out
 
 def aplicar_color_pop(image_path, hex_color="#ff0000", tolerance_deg=25):
-    """
-    Mantém pixels próximos do matiz escolhido e converte o restante para cinza.
-    - hex_color: #RRGGBB
-    - tolerance_deg: tolerância no matiz (0–60 recomendado)
-    """
-    img = Image.open(image_path).convert("RGB")
+    """Destaca uma cor específica, convertendo o resto para cinza."""
+    img = abrir_rgb(image_path)
     w, h = img.size
     px = img.load()
 
@@ -94,16 +99,20 @@ def index():
             original_filename = arquivo.filename
 
         # aplica filtro selecionado
-        if filtro == "sepia":
-            saida = aplicar_sepia(original_path)
-        elif filtro == "sketch":
-            saida = aplicar_sketch(original_path)
-        elif filtro == "colorpop":
-            cor = request.form.get("cor", "#ff0000")
-            tol = float(request.form.get("tol", 25))
-            saida = aplicar_color_pop(original_path, cor, tol)
-        else:
-            return render_template("index.html", erro="Filtro inválido.")
+        try:
+            if filtro == "sepia":
+                saida = aplicar_sepia(original_path)
+            elif filtro == "sketch":
+                saida = aplicar_sketch(original_path)
+            elif filtro == "colorpop":
+                cor = request.form.get("cor", "#ff0000")
+                tol = float(request.form.get("tol", 25))
+                saida = aplicar_color_pop(original_path, cor, tol)
+            else:
+                return render_template("index.html", erro="Filtro inválido.")
+        except ValueError as e:
+            return render_template("index.html", erro=str(e))
+
 
         # Prepara dados para o template
         template_data = {
